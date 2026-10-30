@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LogOut } from "lucide-react";
 
+import { logoutAction } from "@/lib/auth-actions";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { Button } from "@/components/ui/button";
 
@@ -16,15 +17,17 @@ export function AdminSidebar() {
         <AdminNav />
       </div>
       <div className="border-t border-sidebar-border p-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start gap-2"
-          disabled
-        >
-          <LogOut className="size-4" />
-          Logout (Phase 2)
-        </Button>
+        <form action={logoutAction}>
+          <Button
+            type="submit"
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start gap-2"
+          >
+            <LogOut className="size-4" />
+            Logout
+          </Button>
+        </form>
       </div>
     </aside>
   );

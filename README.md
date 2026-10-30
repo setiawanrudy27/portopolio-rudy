@@ -8,11 +8,11 @@ Neon PostgreSQL · Auth.js · S3-compatible storage · FormSubmit.co · Vercel
 
 ## Status
 
-- Phase 0 — Technical feasibility: **done** (Neon connected locally and on Vercel)
-- Phase 1 — Project foundation: **done** (shadcn/ui, schema + initial migration,
-  public and admin layouts)
-- Phase 2 — Authentication: not started
-- Phase 3+ — not started
+- Phase 0 — Technical feasibility: **done**
+- Phase 1 — Project foundation: **done**
+- Phase 2 — Authentication: **done** (Auth.js credentials, protected admin,
+  rate-limited login, admin seed)
+- Phase 3 — Admin dashboard & CMS: not started
 
 ## Requirements
 

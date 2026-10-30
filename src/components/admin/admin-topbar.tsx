@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 
+import { logoutAction } from "@/lib/auth-actions";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +15,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-export function AdminTopbar() {
+type AdminUser = {
+  name?: string | null;
+  email?: string | null;
+};
+
+export function AdminTopbar({ user }: { user: AdminUser }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -41,8 +47,13 @@ export function AdminTopbar() {
       </div>
       <div className="flex items-center gap-3">
         <span className="hidden text-xs text-muted-foreground sm:block">
-          Autentikasi aktif pada Phase 2
+          {user.name ?? user.email}
         </span>
+        <form action={logoutAction}>
+          <Button type="submit" variant="ghost" size="sm">
+            Logout
+          </Button>
+        </form>
         <Link
           href="/"
           className="text-sm text-muted-foreground transition-colors hover:text-foreground"
