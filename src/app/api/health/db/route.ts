@@ -10,7 +10,9 @@ import { getPrismaClient } from "@/lib/prisma";
 export async function GET() {
   try {
     const prisma = getPrismaClient();
-    const result = await prisma.$queryRaw<Array<{ ok: number }>>`SELECT 1 AS ok`;
+    const result = await prisma.$queryRaw<
+      Array<{ ok: number }>
+    >`SELECT 1 AS ok`;
 
     return Response.json(
       {

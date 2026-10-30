@@ -1,7 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// Prisma schema for the Personal IT Portfolio & CMS.
+// Tables follow PRD v3.2 section 6.2. Work experience and education tables are
+// intentionally absent (explicitly excluded by the PRD).
 
 generator client {
   provider = "prisma-client"
@@ -10,4 +9,255 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum AdminRole {
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum ContactMessageStatus {
+  NEW
+  READ
+  ARCHIVED
+}
+
+enum EmailNotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+/// Admin accounts. No public registration: accounts are provisioned via seed.
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         AdminRole @default(ADMIN)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+/// Single-row table holding the portfolio owner's profile.
+model Profile {
+  id                String   @id @default(cuid())
+  name              String
+  professionalTitle String   @map("professional_title")
+  shortBio          String   @map("short_bio")
+  aboutContent      String   @map("about_content")
+  profileImageUrl   String?  @map("profile_image_url")
+  profileImageKey   String?  @map("profile_image_key")
+  contactEmail      String?  @map("contact_email")
+  contactPhone      String?  @map("contact_phone")
+  location          String?
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("profiles")
+}
+
+model SkillCategory {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  skills Skill[]
+
+  @@index([isActive, sortOrder])
+  @@map("skill_categories")
+}
+
+model Skill {
+  id          String   @id @default(cuid())
+  categoryId  String   @map("category_id")
+  name        String
+  description String?
+  icon        String?
+  sortOrder   Int      @default(0) @map("sort_order")
+  isPublished Boolean  @default(true) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  category SkillCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([categoryId, sortOrder])
+  @@index([isPublished])
+  @@map("skills")
+}
+
+model ToolCategory {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tools Tool[]
+
+  @@index([isActive, sortOrder])
+  @@map("tool_categories")
+}
+
+model Tool {
+  id          String   @id @default(cuid())
+  categoryId  String   @map("category_id")
+  name        String
+  description String?
+  logoUrl     String?  @map("logo_url")
+  logoKey     String?  @map("logo_key")
+  websiteUrl  String?  @map("website_url")
+  sortOrder   Int      @default(0) @map("sort_order")
+  isPublished Boolean  @default(true) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  category     ToolCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  projectTools ProjectTool[]
+
+  @@index([categoryId, sortOrder])
+  @@index([isPublished])
+  @@map("tools")
+}
+
+model ProjectCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  projects Project[]
+
+  @@index([sortOrder])
+  @@map("project_categories")
+}
+
+model Project {
+  id               String        @id @default(cuid())
+  categoryId       String        @map("category_id")
+  title            String
+  slug             String        @unique
+  shortDescription String        @map("short_description")
+  overview         String?
+  background       String?
+  objectives       String?
+  responsibilities String?
+  challenges       String?
+  solutions        String?
+  implementation   String?
+  results          String?
+  thumbnailUrl     String?       @map("thumbnail_url")
+  thumbnailKey     String?       @map("thumbnail_key")
+  projectUrl       String?       @map("project_url")
+  repositoryUrl    String?       @map("repository_url")
+  projectDate      DateTime?     @map("project_date")
+  status           ProjectStatus @default(DRAFT)
+  isFeatured       Boolean       @default(false) @map("is_featured")
+  sortOrder        Int           @default(0) @map("sort_order")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  category     ProjectCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  images       ProjectImage[]
+  projectTools ProjectTool[]
+
+  @@index([categoryId])
+  @@index([status, isFeatured, sortOrder])
+  @@map("projects")
+}
+
+model ProjectImage {
+  id        String   @id @default(cuid())
+  projectId String   @map("project_id")
+  imageUrl  String   @map("image_url")
+  objectKey String   @map("object_key")
+  altText   String?  @map("alt_text")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, sortOrder])
+  @@map("project_images")
+}
+
+model ProjectTool {
+  projectId String @map("project_id")
+  toolId    String @map("tool_id")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tool    Tool    @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, toolId])
+  @@index([toolId])
+  @@map("project_tools")
+}
+
+model Resume {
+  id               String   @id @default(cuid())
+  originalFileName String   @map("original_file_name")
+  fileUrl          String   @map("file_url")
+  objectKey        String   @map("object_key")
+  mimeType         String   @map("mime_type")
+  fileSize         Int      @map("file_size")
+  isActive         Boolean  @default(true) @map("is_active")
+  uploadedAt       DateTime @default(now()) @map("uploaded_at")
+
+  @@index([isActive, uploadedAt])
+  @@map("resumes")
+}
+
+model SocialLink {
+  id        String   @id @default(cuid())
+  platform  String
+  url       String
+  icon      String?
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive, sortOrder])
+  @@map("social_links")
+}
+
+model ContactMessage {
+  id                      String                  @id @default(cuid())
+  name                    String
+  email                   String
+  subject                 String?
+  message                 String
+  status                  ContactMessageStatus    @default(NEW)
+  emailNotificationStatus EmailNotificationStatus @default(PENDING) @map("email_notification_status")
+  emailNotificationError  String?                 @map("email_notification_error")
+  createdAt               DateTime                @default(now()) @map("created_at")
+  updatedAt               DateTime                @updatedAt @map("updated_at")
+
+  @@index([status, createdAt])
+  @@index([email])
+  @@map("contact_messages")
+}
+
+model WebsiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("website_settings")
 }
